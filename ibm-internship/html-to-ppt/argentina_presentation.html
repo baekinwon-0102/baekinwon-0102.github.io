@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>아르헨티나</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+      background: #0a0a1a;
+      height: 100vh; display: flex; flex-direction: column; overflow: hidden;
+    }
+    #header {
+      background: linear-gradient(90deg, #74ACDF 0%, #74ACDF 38%, #fff 38%, #fff 62%, #74ACDF 62%);
+      padding: 0; height: 8px; flex-shrink: 0;
+    }
+    #header-bar {
+      background: #1a1a2e; color: #fff;
+      padding: 8px 24px; display: flex; align-items: center;
+      justify-content: space-between; font-size: 13px; flex-shrink: 0;
+    }
+    #header-bar .pres-title { font-weight: 800; font-size: 14px; letter-spacing: 2px; text-transform: uppercase; color: #74ACDF; }
+    #stage { flex: 1; position: relative; overflow: hidden; }
+
+    /* ── Slide base ── */
+    .slide {
+      display: none; width: 1920px; height: 1080px;
+      position: absolute; top: 50%; left: 50%;
+      /* CSS에서 초기 transform을 설정해 JS 호출 전에도 중앙 정렬 */
+      transform: translate(-50%, -50%) scale(0.667); /* 1280/1920 기본값 */
+      transform-origin: center center;
+      overflow: hidden;
+      background: #fff;
+    }
+    .slide.active { display: block; }
+
+    @keyframes slide-in-r {
+      from { opacity:0; transform: translate(calc(-50% + 100px), -50%) scale(var(--s,1)); }
+      to   { opacity:1; transform: translate(-50%,-50%) scale(var(--s,1)); }
+    }
+    @keyframes slide-in-l {
+      from { opacity:0; transform: translate(calc(-50% - 100px), -50%) scale(var(--s,1)); }
+      to   { opacity:1; transform: translate(-50%,-50%) scale(var(--s,1)); }
+    }
+    .entering-right { animation: slide-in-r 0.45s cubic-bezier(0.22,1,0.36,1) forwards; }
+    .entering-left  { animation: slide-in-l 0.45s cubic-bezier(0.22,1,0.36,1) forwards; }
+
+    /* ════════════════════════════════
+       SLIDE 0 — 표지
+       디자인: 좌측 넓은 컬러 사이드바 + 우측 흰 패널
+    ════════════════════════════════ */
+    #slide-0 { background: #fff; }
+    .s0-left {
+      position: absolute; left:0; top:0; width:680px; height:100%;
+      background: #74ACDF;
+      display: flex; flex-direction: column; justify-content: flex-end; padding: 80px 64px;
+    }
+    .s0-stripe {
+      position: absolute; top:0; left:0; width:100%; height:100%;
+      background: repeating-linear-gradient(
+        -55deg,
+        transparent, transparent 60px,
+        rgba(255,255,255,0.07) 60px, rgba(255,255,255,0.07) 62px
+      );
+    }
+    .s0-right {
+      position: absolute; left:680px; top:0; right:0; height:100%;
+      display: flex; flex-direction: column; justify-content: center;
+      padding: 80px 80px 80px 100px;
+    }
+    @keyframes s0-left-in  { from{opacity:0;transform:translateX(-60px)} to{opacity:1;transform:translateX(0)} }
+    @keyframes s0-right-in { from{opacity:0;transform:translateX(60px)}  to{opacity:1;transform:translateX(0)} }
+    @keyframes s0-tag-in   { from{opacity:0;transform:translateY(30px) scale(0.8)} to{opacity:1;transform:translateY(0) scale(1)} }
+    #slide-0.active .s0-left  { animation: s0-left-in  0.6s ease forwards; }
+    #slide-0.active .s0-right { animation: s0-right-in 0.6s ease 0.15s both; }
+    #slide-0.active .s0-tag   { animation: s0-tag-in   0.5s cubic-bezier(0.34,1.5,0.64,1) 0.55s both; }
+    .s0-eyebrow { font-size:18px; font-weight:700; letter-spacing:5px; color:rgba(255,255,255,0.7); text-transform:uppercase; margin-bottom:20px; }
+    .s0-title   { font-size:96px; font-weight:900; color:#fff; line-height:0.95; letter-spacing:-2px; }
+    .s0-sub     { font-size:22px; color:rgba(255,255,255,0.75); margin-top:28px; line-height:1.6; }
+    .s0-r-label { font-size:16px; font-weight:700; letter-spacing:4px; color:#74ACDF; text-transform:uppercase; margin-bottom:32px; }
+    .s0-r-title { font-size:52px; font-weight:800; color:#1a1a2e; line-height:1.15; }
+    .s0-r-desc  { font-size:24px; color:#555; margin-top:28px; line-height:1.7; }
+    .s0-tag {
+      display:inline-flex; align-items:center; gap:12px;
+      margin-top:48px; background:#1a1a2e; color:#74ACDF;
+      border-radius:4px; padding:14px 32px; font-size:20px; font-weight:700;
+      letter-spacing:1px;
+    }
+    .s0-divider { width:60px; height:5px; background:#74ACDF; border-radius:2px; margin:32px 0; }
+
+    /* ════════════════════════════════
+       SLIDE 1 — 지리
+       디자인: 전체 다크 배경 + 중앙 지도 SVG + 좌우 stat 패널
+    ════════════════════════════════ */
+    #slide-1 { background: #0f1923; }
+    .s1-bg-dots {
+      position:absolute; inset:0; pointer-events:none;
+      background-image: radial-gradient(circle, rgba(116,172,223,0.12) 1px, transparent 1px);
+      background-size: 48px 48px;
+    }
+    .s1-layout {
+      position:absolute; inset:0;
+      display:flex; align-items:center;
+    }
+    .s1-left  { flex:0 0 500px; padding:80px 60px; display:flex; flex-direction:column; gap:28px; }
+    .s1-center{ flex:1; display:flex; align-items:center; justify-content:center; }
+    .s1-right { flex:0 0 500px; padding:80px 60px; display:flex; flex-direction:column; gap:28px; }
+    @keyframes s1-stat-in { from{opacity:0;transform:translateX(-40px)} to{opacity:1;transform:translateX(0)} }
+    @keyframes s1-stat-in-r{ from{opacity:0;transform:translateX(40px)}  to{opacity:1;transform:translateX(0)} }
+    @keyframes s1-map-in   { from{opacity:0;transform:scale(0.8)}         to{opacity:1;transform:scale(1)} }
+    #slide-1.active .s1-stat-l:nth-child(1){ animation: s1-stat-in 0.5s ease forwards 0.1s; }
+    #slide-1.active .s1-stat-l:nth-child(2){ animation: s1-stat-in 0.5s ease forwards 0.25s; }
+    #slide-1.active .s1-stat-l:nth-child(3){ animation: s1-stat-in 0.5s ease forwards 0.4s; }
+    #slide-1.active .s1-stat-r:nth-child(1){ animation: s1-stat-in-r 0.5s ease forwards 0.15s; }
+    #slide-1.active .s1-stat-r:nth-child(2){ animation: s1-stat-in-r 0.5s ease forwards 0.3s; }
+    #slide-1.active .s1-stat-r:nth-child(3){ animation: s1-stat-in-r 0.5s ease forwards 0.45s; }
+    #slide-1.active .s1-map  { animation: s1-map-in  0.7s cubic-bezier(0.34,1.2,0.64,1) 0.1s both; }
+    .s1-stat-l, .s1-stat-r {
+      opacity:0; border-left:4px solid #74ACDF; padding:16px 24px;
+      background:rgba(116,172,223,0.06); border-radius:0 10px 10px 0;
+    }
+    .s1-stat-r { border-left:none; border-right:4px solid #F6B40E; background:rgba(246,180,14,0.06); border-radius:10px 0 0 10px; text-align:right; }
+    .stat-num   { font-size:48px; font-weight:900; color:#74ACDF; line-height:1; }
+    .stat-num-y { font-size:48px; font-weight:900; color:#F6B40E; line-height:1; }
+    .stat-lbl   { font-size:18px; color:rgba(255,255,255,0.6); margin-top:4px; }
+    .stat-sub   { font-size:15px; color:rgba(255,255,255,0.4); margin-top:2px; }
+    .s1-title   { font-size:52px; font-weight:900; color:#fff; margin-bottom:8px; }
+    .s1-sub     { font-size:20px; color:rgba(116,172,223,0.8); letter-spacing:3px; text-transform:uppercase; }
+
+    /* ════════════════════════════════
+       SLIDE 2 — 역사
+       디자인: 세로 타임라인 중앙 축 + 좌우 교차 카드
+    ════════════════════════════════ */
+    #slide-2 { background:#fafaf5; }
+    .s2-header {
+      position:absolute; top:0; left:0; right:0; height:140px;
+      background:#1a1a2e;
+      display:flex; align-items:center; padding:0 80px; gap:24px;
+    }
+    .s2-header-title { font-size:48px; font-weight:900; color:#fff; }
+    .s2-badge { background:#74ACDF; color:#1a1a2e; font-size:16px; font-weight:800; letter-spacing:2px; padding:6px 18px; border-radius:4px; text-transform:uppercase; }
+    .s2-body { position:absolute; top:140px; left:0; right:0; bottom:0; overflow:hidden; }
+    /* 중앙 세로선 */
+    .s2-axis {
+      position:absolute; left:50%; top:0; bottom:0; width:4px;
+      background:linear-gradient(180deg,#74ACDF,#F6B40E,#74ACDF);
+      transform:translateX(-50%);
+    }
+    .tl-row {
+      display:flex; align-items:center;
+      position:absolute; width:100%; left:0;
+    }
+    .tl-left  { flex:1; padding-right:80px; text-align:right; }
+    .tl-right { flex:1; padding-left:80px; }
+    .tl-dot {
+      flex:0 0 28px; height:28px; border-radius:50%;
+      background:#fff; border:4px solid #74ACDF;
+      box-shadow:0 0 0 6px rgba(116,172,223,0.2);
+      position:relative; z-index:2;
+    }
+    .tl-card {
+      background:#fff; border-radius:12px; padding:20px 28px;
+      box-shadow:0 4px 20px rgba(0,0,0,0.08);
+      border-top:4px solid #74ACDF;
+      opacity:0;
+    }
+    .tl-card.right { border-top-color:#F6B40E; }
+    .tl-year   { font-size:28px; font-weight:900; color:#74ACDF; }
+    .tl-year.y { color:#F6B40E; }
+    .tl-event  { font-size:22px; font-weight:700; color:#1a1a2e; margin-top:4px; }
+    .tl-desc   { font-size:18px; color:#666; line-height:1.5; margin-top:6px; }
+    @keyframes tl-left-in  { from{opacity:0;transform:translateX(-40px)} to{opacity:1;transform:translateX(0)} }
+    @keyframes tl-right-in { from{opacity:0;transform:translateX(40px)}  to{opacity:1;transform:translateX(0)} }
+    #slide-2.active .tl-card:nth-child(1){ animation:tl-left-in  0.45s ease forwards 0.1s; }
+    #slide-2.active .tl-card:nth-child(2){ animation:tl-right-in 0.45s ease forwards 0.22s; }
+    #slide-2.active .tl-card:nth-child(3){ animation:tl-left-in  0.45s ease forwards 0.34s; }
+    #slide-2.active .tl-card:nth-child(4){ animation:tl-right-in 0.45s ease forwards 0.46s; }
+    #slide-2.active .tl-card:nth-child(5){ animation:tl-left-in  0.45s ease forwards 0.58s; }
+
+    /* ════════════════════════════════
+       SLIDE 3 — 문화
+       디자인: 3분할 수직 스트립 레이아웃
+    ════════════════════════════════ */
+    #slide-3 { background:#fff; }
+    .s3-strips { position:absolute; inset:0; display:flex; }
+    .s3-strip  {
+      flex:1; display:flex; flex-direction:column;
+      justify-content:flex-end; padding:60px 48px; position:relative; overflow:hidden;
+      opacity:0;
+    }
+    @keyframes strip-up { from{opacity:0;transform:translateY(60px)} to{opacity:1;transform:translateY(0)} }
+    #slide-3.active .s3-strip:nth-child(1){ animation:strip-up 0.5s ease forwards 0.05s; }
+    #slide-3.active .s3-strip:nth-child(2){ animation:strip-up 0.5s ease forwards 0.2s; }
+    #slide-3.active .s3-strip:nth-child(3){ animation:strip-up 0.5s ease forwards 0.35s; }
+    #slide-3.active .s3-strip:nth-child(4){ animation:strip-up 0.5s ease forwards 0.5s; }
+    .s3-strip::after {
+      content:''; position:absolute; bottom:0; left:0; right:0; height:60%;
+      background:linear-gradient(transparent, rgba(0,0,0,0.75));
+    }
+    .s3-strip:nth-child(1){ background:#1a1a2e; }
+    .s3-strip:nth-child(2){ background:#74ACDF; }
+    .s3-strip:nth-child(3){ background:#F6B40E; }
+    .s3-strip:nth-child(4){ background:#c0392b; }
+    .s3-strip-icon  { font-size:80px; position:relative; z-index:2; margin-bottom:16px; }
+    .s3-strip-title { font-size:34px; font-weight:900; color:#fff; position:relative; z-index:2; }
+    .s3-strip-body  { font-size:20px; color:rgba(255,255,255,0.85); line-height:1.6; position:relative; z-index:2; margin-top:10px; }
+    .s3-strip-tag   { font-size:13px; font-weight:700; letter-spacing:3px; color:rgba(255,255,255,0.6); text-transform:uppercase; position:relative; z-index:2; margin-bottom:20px; }
+    /* 상단 제목 바 */
+    .s3-topbar {
+      position:absolute; top:0; left:0; right:0; height:110px; z-index:10;
+      background:rgba(255,255,255,0.96); backdrop-filter:blur(4px);
+      display:flex; align-items:center; padding:0 60px; gap:20px;
+      border-bottom:4px solid #74ACDF;
+    }
+    .s3-topbar-title{ font-size:44px; font-weight:900; color:#1a1a2e; }
+    .s3-topbar-badge{ background:#1a1a2e; color:#74ACDF; font-size:15px; font-weight:800; padding:6px 16px; border-radius:4px; letter-spacing:2px; }
+
+    /* ════════════════════════════════
+       SLIDE 4 — 탱고
+       디자인: 대각선 분할 (좌=다크, 우=포인트)
+    ════════════════════════════════ */
+    #slide-4 { background:#1a0a0a; }
+    .s4-diag-left {
+      position:absolute; top:0; left:0; width:55%; height:100%;
+      background:linear-gradient(135deg, #1a0a0a 0%, #2d0505 100%);
+      clip-path: polygon(0 0, 90% 0, 70% 100%, 0 100%);
+    }
+    .s4-diag-right {
+      position:absolute; top:0; right:0; width:55%; height:100%;
+      background:linear-gradient(135deg, #8b0000 0%, #c0392b 60%, #e74c3c 100%);
+      clip-path: polygon(30% 0, 100% 0, 100% 100%, 10% 100%);
+    }
+    .s4-content {
+      position:absolute; inset:0;
+      display:flex; align-items:center;
+    }
+    .s4-left  { flex:1; padding:80px 60px 80px 80px; }
+    .s4-right { flex:0 0 680px; padding:80px 80px 80px 60px; display:flex; flex-direction:column; justify-content:center; }
+    @keyframes s4-l-in{ from{opacity:0;transform:translateX(-50px)} to{opacity:1;transform:translateX(0)} }
+    @keyframes s4-r-in{ from{opacity:0;transform:translateX(50px)}  to{opacity:1;transform:translateX(0)} }
+    @keyframes s4-svg-in{ from{opacity:0;transform:scale(0.7) rotate(-10deg)} to{opacity:1;transform:scale(1) rotate(0)} }
+    #slide-4.active .s4-left  { animation:s4-l-in 0.6s ease forwards 0.1s; }
+    #slide-4.active .s4-right { animation:s4-r-in 0.6s ease forwards 0.25s; }
+    #slide-4.active .s4-dancer{ animation:s4-svg-in 0.7s cubic-bezier(0.34,1.3,0.64,1) 0.2s both; }
+    .s4-eyebrow { font-size:16px; font-weight:700; letter-spacing:5px; color:rgba(255,100,80,0.7); text-transform:uppercase; margin-bottom:20px; }
+    .s4-title   { font-size:88px; font-weight:900; color:#fff; line-height:0.9; letter-spacing:-2px; }
+    .s4-sub     { font-size:22px; color:rgba(255,255,255,0.6); margin-top:24px; line-height:1.7; }
+    .s4-fact    { margin-top:40px; background:rgba(255,255,255,0.08); border-left:4px solid #e74c3c; padding:20px 28px; border-radius:0 10px 10px 0; }
+    .s4-fact-num{ font-size:40px; font-weight:900; color:#e74c3c; }
+    .s4-fact-lbl{ font-size:18px; color:rgba(255,255,255,0.7); margin-top:4px; }
+    .s4-list    { display:flex; flex-direction:column; gap:20px; }
+    .s4-item    { display:flex; align-items:flex-start; gap:18px; }
+    .s4-item-dot{ width:10px; height:10px; border-radius:50%; background:#e74c3c; flex-shrink:0; margin-top:8px; }
+    .s4-item-text{ font-size:22px; color:rgba(255,255,255,0.85); line-height:1.5; }
+    .s4-item-text strong{ color:#fff; }
+
+    /* ════════════════════════════════
+       SLIDE 5 — 음식
+       디자인: 비대칭 카드 그리드 (큰 카드 1 + 작은 카드 4)
+    ════════════════════════════════ */
+    #slide-5 { background:#fdf8f0; }
+    .s5-topbar {
+      position:absolute; top:0; left:0; right:0; height:120px;
+      background:#1a1a2e; display:flex; align-items:center;
+      padding:0 80px; gap:24px;
+    }
+    .s5-topbar-title{ font-size:46px; font-weight:900; color:#fff; }
+    .s5-topbar-badge{ background:#F6B40E; color:#1a1a2e; font-size:15px; font-weight:800; padding:6px 16px; border-radius:4px; letter-spacing:2px; }
+    .s5-grid {
+      position:absolute; top:120px; left:0; right:0; bottom:0;
+      display:grid;
+      grid-template-columns: 560px 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      gap:3px; background:#e0d8cc;
+    }
+    .s5-card {
+      background:#fff; display:flex; flex-direction:column;
+      justify-content:flex-end; padding:40px 44px;
+      position:relative; overflow:hidden; opacity:0;
+      transition:transform 0.2s;
+    }
+    .s5-card:hover{ transform:scale(1.01); z-index:2; }
+    .s5-card.big  { grid-row:1/3; }
+    .s5-card-bg   { position:absolute; inset:0; pointer-events:none; }
+    @keyframes s5-in{ from{opacity:0;transform:scale(0.96)} to{opacity:1;transform:scale(1)} }
+    #slide-5.active .s5-card:nth-child(1){ animation:s5-in 0.4s ease forwards 0.05s; }
+    #slide-5.active .s5-card:nth-child(2){ animation:s5-in 0.4s ease forwards 0.15s; }
+    #slide-5.active .s5-card:nth-child(3){ animation:s5-in 0.4s ease forwards 0.25s; }
+    #slide-5.active .s5-card:nth-child(4){ animation:s5-in 0.4s ease forwards 0.35s; }
+    #slide-5.active .s5-card:nth-child(5){ animation:s5-in 0.4s ease forwards 0.45s; }
+    .s5-overlay{ position:absolute; inset:0; background:linear-gradient(transparent 30%, rgba(0,0,0,0.7)); }
+    .s5-emoji  { font-size:72px; position:relative; z-index:2; margin-bottom:12px; }
+    .s5-name   { font-size:36px; font-weight:900; color:#fff; position:relative; z-index:2; text-shadow:0 2px 8px rgba(0,0,0,0.5); }
+    .s5-desc   { font-size:20px; color:rgba(255,255,255,0.85); line-height:1.5; position:relative; z-index:2; margin-top:8px; }
+    .s5-name.dark{ color:#1a1a2e; text-shadow:none; }
+    .s5-desc.dark{ color:#444; }
+
+    /* ════════════════════════════════
+       SLIDE 6 — 경제
+       디자인: 다크 배경 + 수평 바 차트 + 우측 텍스트
+    ════════════════════════════════ */
+    #slide-6 { background:#0f1923; }
+    .s6-layout{ position:absolute; inset:0; display:flex; }
+    .s6-left  { flex:1; padding:80px; display:flex; flex-direction:column; justify-content:center; gap:32px; }
+    .s6-right { flex:0 0 680px; padding:80px 80px 80px 40px; display:flex; flex-direction:column; justify-content:center; gap:24px; }
+    .s6-heading{ font-size:52px; font-weight:900; color:#fff; line-height:1.1; }
+    .s6-heading span{ color:#F6B40E; }
+    .s6-sub{ font-size:20px; color:rgba(255,255,255,0.5); letter-spacing:2px; text-transform:uppercase; margin-bottom:8px; }
+    .bar-row{ display:flex; flex-direction:column; gap:8px; }
+    .bar-label{ font-size:20px; color:rgba(255,255,255,0.75); }
+    .bar-track{ height:36px; background:rgba(255,255,255,0.08); border-radius:4px; overflow:hidden; }
+    .bar-fill {
+      height:100%; border-radius:4px; display:flex; align-items:center;
+      padding:0 16px; font-size:18px; font-weight:800; color:#fff;
+      opacity:0; transform:scaleX(0); transform-origin:left;
+    }
+    @keyframes bar-grow{ from{opacity:0;transform:scaleX(0)} to{opacity:1;transform:scaleX(1)} }
+    #slide-6.active .bar-fill:nth-child(1){ animation:bar-grow 0.7s cubic-bezier(0.22,1,0.36,1) 0.2s both; }
+    .bar-fill-1{ background:linear-gradient(90deg,#74ACDF,#5090c0); width:72%; }
+    .bar-fill-2{ background:linear-gradient(90deg,#F6B40E,#e0a000); width:58%; }
+    .bar-fill-3{ background:linear-gradient(90deg,#2ecc71,#27ae60); width:85%; }
+    .bar-fill-4{ background:linear-gradient(90deg,#e74c3c,#c0392b); width:43%; }
+    .bar-fill-5{ background:linear-gradient(90deg,#9b59b6,#8e44ad); width:65%; }
+    #slide-6.active .bar-track:nth-child(1) .bar-fill{ animation:bar-grow 0.7s cubic-bezier(0.22,1,0.36,1) 0.1s both; }
+    #slide-6.active .bar-track:nth-child(2) .bar-fill{ animation:bar-grow 0.7s cubic-bezier(0.22,1,0.36,1) 0.25s both; }
+    #slide-6.active .bar-track:nth-child(3) .bar-fill{ animation:bar-grow 0.7s cubic-bezier(0.22,1,0.36,1) 0.4s both; }
+    #slide-6.active .bar-track:nth-child(4) .bar-fill{ animation:bar-grow 0.7s cubic-bezier(0.22,1,0.36,1) 0.55s both; }
+    #slide-6.active .bar-track:nth-child(5) .bar-fill{ animation:bar-grow 0.7s cubic-bezier(0.22,1,0.36,1) 0.7s both; }
+    .s6-kpi{
+      background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1);
+      border-radius:12px; padding:24px 32px;
+      opacity:0;
+    }
+    @keyframes s6-kpi-in{ from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+    #slide-6.active .s6-kpi:nth-child(1){ animation:s6-kpi-in 0.5s ease forwards 0.15s; }
+    #slide-6.active .s6-kpi:nth-child(2){ animation:s6-kpi-in 0.5s ease forwards 0.3s; }
+    #slide-6.active .s6-kpi:nth-child(3){ animation:s6-kpi-in 0.5s ease forwards 0.45s; }
+    .kpi-num  { font-size:52px; font-weight:900; color:#F6B40E; line-height:1; }
+    .kpi-label{ font-size:18px; color:rgba(255,255,255,0.6); margin-top:4px; }
+
+    /* ════════════════════════════════
+       SLIDE 7 — 마무리
+       디자인: 풀스크린 + 원형 구성 요소
+    ════════════════════════════════ */
+    /* display는 .slide / .slide.active 에서 제어 — 여기서 지정하면 display:none 무효화됨 */
+    #slide-7 {
+      background:linear-gradient(135deg, #1a1a2e 0%, #0a1628 50%, #0d1a0a 100%);
+      align-items:center; justify-content:center;
+      position:relative;
+    }
+    #slide-7.active { display:flex; }
+    .s7-ring {
+      position:absolute; border-radius:50%; border:1px solid rgba(116,172,223,0.15);
+    }
+    @keyframes ring-spin  { from{transform:rotate(0)}   to{transform:rotate(360deg)}  }
+    @keyframes ring-spin-r{ from{transform:rotate(0)}   to{transform:rotate(-360deg)} }
+    .s7-ring-1{ width:800px;  height:800px;  left:50%; top:50%; transform:translate(-50%,-50%); animation:ring-spin   28s linear infinite; }
+    .s7-ring-2{ width:1100px; height:1100px; left:50%; top:50%; transform:translate(-50%,-50%); animation:ring-spin-r 40s linear infinite; border-color:rgba(246,180,14,0.08); }
+    .s7-ring-3{ width:1400px; height:1400px; left:50%; top:50%; transform:translate(-50%,-50%); animation:ring-spin   60s linear infinite; border-color:rgba(255,255,255,0.04); }
+    .s7-content{ position:relative; z-index:5; text-align:center; }
+    @keyframes s7-title-in{ from{opacity:0;transform:translateY(-40px) scale(0.9)} to{opacity:1;transform:translateY(0) scale(1)} }
+    @keyframes s7-sub-in  { from{opacity:0;transform:translateY(30px)}             to{opacity:1;transform:translateY(0)} }
+    #slide-7.active .s7-main-title{ animation:s7-title-in 0.8s cubic-bezier(0.34,1.3,0.64,1) forwards; }
+    #slide-7.active .s7-sub       { animation:s7-sub-in   0.6s ease 0.4s both; }
+    #slide-7.active .s7-thanks    { animation:s7-sub-in   0.5s ease 0.7s both; }
+    #slide-7.active .s7-flag      { animation:s7-title-in 0.7s cubic-bezier(0.34,1.5,0.64,1) 0.1s both; }
+    .s7-flag       { font-size:110px; opacity:0; margin-bottom:20px; display:block; }
+    .s7-main-title { font-size:90px; font-weight:900; color:#fff; opacity:0; letter-spacing:-1px; line-height:1; }
+    .s7-main-title span{ color:#74ACDF; }
+    .s7-sub        { font-size:28px; color:rgba(255,255,255,0.6); opacity:0; margin-top:20px; line-height:1.7; }
+    .s7-thanks     { font-size:18px; color:rgba(116,172,223,0.5); opacity:0; margin-top:56px; letter-spacing:6px; text-transform:uppercase; }
+
+    /* ── Print ── */
+    @media print {
+      body{ overflow:visible; height:auto; }
+      #header,#header-bar{ display:none !important; }
+      #stage{ display:block; }
+      .slide{ display:block !important; page-break-after:always; width:100%; height:auto; }
+    }
+  </style>
+</head>
+<body>
+<div id="header"></div>
+<div id="header-bar">
+  <span class="pres-title">🇦🇷 República Argentina</span>
+  <span id="slide-counter" style="color:rgba(255,255,255,0.5);">1 / 8</span>
+</div>
+<div id="stage">
+
+  <!-- ══════════════════════════════════
+       SLIDE 0 — 표지
+  ══════════════════════════════════ -->
+  <div class="slide active entering-right" id="slide-0">
+    <div class="s0-left">
+      <div class="s0-stripe"></div>
+      <!-- 아르헨티나 국기 SVG -->
+      <svg viewBox="0 0 200 130" style="width:220px;margin-bottom:40px;border-radius:6px;box-shadow:0 8px 32px rgba(0,0,0,0.4);">
+        <rect width="200" height="130" fill="#74ACDF"/>
+        <rect y="43" width="200" height="44" fill="#fff"/>
+        <!-- 태양 -->
+        <circle cx="100" cy="65" r="18" fill="#F6B40E"/>
+        <g stroke="#F6B40E" stroke-width="3" stroke-linecap="round">
+          <line x1="100" y1="38" x2="100" y2="30"/>
+          <line x1="100" y1="92" x2="100" y2="100"/>
+          <line x1="73"  y1="65" x2="65"  y2="65"/>
+          <line x1="127" y1="65" x2="135" y2="65"/>
+          <line x1="81"  y1="46" x2="76"  y2="39"/>
+          <line x1="119" y1="84" x2="124" y2="91"/>
+          <line x1="119" y1="46" x2="124" y2="39"/>
+          <line x1="81"  y1="84" x2="76"  y2="91"/>
+        </g>
+      </svg>
+      <div class="s0-eyebrow">South America</div>
+      <div class="s0-title">Argentina</div>
+      <div class="s0-sub">세계에서 8번째로 큰 나라,<br>라틴 아메리카의 문화 강국</div>
+    </div>
+    <div class="s0-right">
+      <div class="s0-r-label">República Argentina</div>
+      <div class="s0-r-title">열정·자유·<br>끝없는 대지의<br>나라</div>
+      <div class="s0-divider"></div>
+      <div class="s0-r-desc">
+        파타고니아의 빙하부터 안데스 산맥,<br>
+        팜파스 초원과 이구아수 폭포까지—<br>
+        아르헨티나는 하나의 대륙 그 자체입니다.
+      </div>
+      <div class="s0-tag">
+        <svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="#74ACDF" stroke-width="2"/><path d="M12 2 A10 10 0 0 1 22 12" fill="none" stroke="#74ACDF" stroke-width="2"/></svg>
+        수도: 부에노스아이레스
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       SLIDE 1 — 지리
+  ══════════════════════════════════ -->
+  <div class="slide" id="slide-1">
+    <div class="s1-bg-dots"></div>
+    <div class="s1-layout">
+      <div class="s1-left">
+        <div style="opacity:0;animation:s1-stat-in 0.4s ease forwards 0s;" class="s1-stat-l" id="s1hl1">
+          <div class="s1-title" style="font-size:32px;">지리 개요</div>
+          <div class="s1-sub">Geography</div>
+        </div>
+        <div class="s1-stat-l">
+          <div class="stat-num">2,780,400</div>
+          <div class="stat-lbl">국토 면적 (km²)</div>
+          <div class="stat-sub">세계 8위 · 남미 2위</div>
+        </div>
+        <div class="s1-stat-l">
+          <div class="stat-num">4,665m</div>
+          <div class="stat-lbl">아콩카과 산</div>
+          <div class="stat-sub">남미 최고봉 · 안데스 산맥</div>
+        </div>
+        <div class="s1-stat-l">
+          <div class="stat-num">-105m</div>
+          <div class="stat-lbl">발데스 반도</div>
+          <div class="stat-sub">남미 최저 지점</div>
+        </div>
+      </div>
+
+      <div class="s1-center">
+        <!-- 아르헨티나 국가 윤곽 SVG -->
+        <svg class="s1-map" viewBox="0 0 220 520" style="height:780px;opacity:0;filter:drop-shadow(0 0 30px rgba(116,172,223,0.4));">
+          <!-- 아르헨티나 단순화 윤곽 -->
+          <path d="
+            M 110,10
+            C 140,12 175,20 190,35
+            L 195,55 185,80 190,110
+            C 195,130 200,150 195,170
+            L 185,195 180,220
+            C 178,240 175,260 165,275
+            L 155,295 150,320
+            C 148,340 140,360 125,375
+            L 110,390 95,400
+            C 80,408 65,415 55,425
+            L 45,440 50,455
+            C 55,465 65,470 70,480
+            L 65,495 55,505
+            C 48,510 40,508 38,500
+            L 35,485 42,470
+            C 45,460 40,450 35,445
+            L 25,435 20,420
+            C 18,408 22,395 30,385
+            L 45,370 55,350
+            C 60,335 62,315 65,295
+            L 68,270 72,245
+            C 75,225 70,205 65,185
+            L 55,160 45,135
+            C 38,115 35,90 38,65
+            L 45,40 60,25
+            C 75,15 95,8 110,10 Z
+          " fill="#1e3a5f" stroke="#74ACDF" stroke-width="2"/>
+          <!-- 파타고니아 강조 -->
+          <path d="M 38,460 C 42,472 52,480 58,488 L 52,500 44,506 C 38,508 32,504 30,496 L 28,480 35,468 Z"
+                fill="#2a4a6f" stroke="#74ACDF" stroke-width="1.5" opacity="0.8"/>
+          <!-- 주요 도시 점 -->
+          <circle cx="108" cy="310" r="7" fill="#F6B40E"/>
+          <text x="120" y="314" font-size="14" fill="#F6B40E" font-weight="bold">Buenos Aires</text>
+          <circle cx="90"  cy="195" r="5" fill="#74ACDF"/>
+          <text x="100"  y="199" font-size="12" fill="#74ACDF">Córdoba</text>
+          <circle cx="72"  cy="390" r="5" fill="#74ACDF"/>
+          <text x="82"   y="394" font-size="12" fill="#74ACDF">Bariloche</text>
+          <circle cx="148" cy="130" r="5" fill="#74ACDF"/>
+          <text x="82"   y="126" font-size="12" fill="#74ACDF">Salta</text>
+          <!-- 이구아수 표시 -->
+          <circle cx="168" cy="270" r="5" fill="#2ecc71"/>
+          <text x="120"  y="266" font-size="12" fill="#2ecc71">Iguazú</text>
+          <!-- 격자 배경 -->
+          <line x1="0" y1="130" x2="220" y2="130" stroke="rgba(116,172,223,0.15)" stroke-width="1" stroke-dasharray="4,6"/>
+          <line x1="0" y1="260" x2="220" y2="260" stroke="rgba(116,172,223,0.15)" stroke-width="1" stroke-dasharray="4,6"/>
+          <line x1="0" y1="390" x2="220" y2="390" stroke="rgba(116,172,223,0.15)" stroke-width="1" stroke-dasharray="4,6"/>
+        </svg>
+      </div>
+
+      <div class="s1-right">
+        <div style="opacity:0;animation:s1-stat-in-r 0.4s ease forwards 0s;" class="s1-stat-r">
+          <div class="s1-title" style="font-size:32px;color:#fff;">자연 명소</div>
+          <div class="s1-sub">Nature</div>
+        </div>
+        <div class="s1-stat-r">
+          <div class="stat-num-y">275개</div>
+          <div class="stat-lbl">이구아수 폭포 수</div>
+          <div class="stat-sub">세계 최대 폭포 시스템</div>
+        </div>
+        <div class="s1-stat-r">
+          <div class="stat-num-y">46,000km²</div>
+          <div class="stat-lbl">로스 글라시아레스</div>
+          <div class="stat-sub">파타고니아 빙하 국립공원</div>
+        </div>
+        <div class="s1-stat-r">
+          <div class="stat-num-y">4,900km</div>
+          <div class="stat-lbl">해안선 길이</div>
+          <div class="stat-sub">대서양 연안</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       SLIDE 2 — 역사
+  ══════════════════════════════════ -->
+  <div class="slide" id="slide-2">
+    <div class="s2-header">
+      <span class="s2-badge">역사</span>
+      <span class="s2-header-title">아르헨티나의 발자취</span>
+    </div>
+    <div class="s2-body">
+      <div class="s2-axis"></div>
+      <!-- 타임라인 아이템들 -->
+      <div class="tl-row" style="top:40px;">
+        <div class="tl-left">
+          <div class="tl-card">
+            <div class="tl-year">1516</div>
+            <div class="tl-event">유럽인 첫 접촉</div>
+            <div class="tl-desc">스페인 탐험가 후안 디아스 데 솔리스가 리오 데 라 플라타 강 유역에 처음 도착합니다.</div>
+          </div>
+        </div>
+        <div class="tl-dot"></div>
+        <div class="tl-right"></div>
+      </div>
+      <div class="tl-row" style="top:168px;">
+        <div class="tl-left"></div>
+        <div class="tl-dot" style="border-color:#F6B40E;box-shadow:0 0 0 6px rgba(246,180,14,0.2);"></div>
+        <div class="tl-right">
+          <div class="tl-card right">
+            <div class="tl-year y">1816</div>
+            <div class="tl-event">독립 선언</div>
+            <div class="tl-desc">7월 9일, 투쿠만에서 스페인으로부터 완전 독립을 선언. 현재도 7월 9일은 독립 기념일입니다.</div>
+          </div>
+        </div>
+      </div>
+      <div class="tl-row" style="top:296px;">
+        <div class="tl-left">
+          <div class="tl-card">
+            <div class="tl-year">1853</div>
+            <div class="tl-event">헌법 제정</div>
+            <div class="tl-desc">연방 헌법 공포. 이민을 장려하며 유럽 각지에서 수백만 명이 아르헨티나로 이주합니다.</div>
+          </div>
+        </div>
+        <div class="tl-dot"></div>
+        <div class="tl-right"></div>
+      </div>
+      <div class="tl-row" style="top:424px;">
+        <div class="tl-left"></div>
+        <div class="tl-dot" style="border-color:#F6B40E;box-shadow:0 0 0 6px rgba(246,180,14,0.2);"></div>
+        <div class="tl-right">
+          <div class="tl-card right">
+            <div class="tl-year y">1946</div>
+            <div class="tl-event">페론 집권</div>
+            <div class="tl-desc">후안 페론 대통령 취임. 에비타(에바 페론)와 함께 노동자 운동과 복지 정책으로 아르헨티나 현대사의 핵심이 됩니다.</div>
+          </div>
+        </div>
+      </div>
+      <div class="tl-row" style="top:552px;">
+        <div class="tl-left">
+          <div class="tl-card">
+            <div class="tl-year">1983</div>
+            <div class="tl-event">민주주의 회복</div>
+            <div class="tl-desc">군사 독재 종식 후 민선 정부 수립. 라울 알폰신 대통령이 민주주의 시대를 열었습니다.</div>
+          </div>
+        </div>
+        <div class="tl-dot"></div>
+        <div class="tl-right"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       SLIDE 3 — 문화
+  ══════════════════════════════════ -->
+  <div class="slide" id="slide-3">
+    <div class="s3-topbar">
+      <span class="s3-topbar-badge">문화</span>
+      <span class="s3-topbar-title">아르헨티나의 문화 DNA</span>
+    </div>
+    <div class="s3-strips" style="top:110px;bottom:0;position:absolute;left:0;right:0;">
+      <div class="s3-strip">
+        <div class="s3-strip-tag">Music</div>
+        <div class="s3-strip-icon">🎸</div>
+        <div class="s3-strip-title">탱고와 음악</div>
+        <div class="s3-strip-body">부에노스아이레스 뒷골목에서 탄생한 탱고는 2009년 유네스코 무형유산에 등재됩니다. 록 나시오날도 세계적 명성을 얻었습니다.</div>
+      </div>
+      <div class="s3-strip">
+        <div class="s3-strip-tag">Sports</div>
+        <div class="s3-strip-icon">⚽</div>
+        <div class="s3-strip-title">축구의 나라</div>
+        <div class="s3-strip-body">마라도나와 메시의 나라. FIFA 월드컵 3회 우승(1978·1986·2022). 전국 어디서나 축구가 삶의 중심입니다.</div>
+      </div>
+      <div class="s3-strip">
+        <div class="s3-strip-tag">Literature</div>
+        <div class="s3-strip-icon">📚</div>
+        <div class="s3-strip-title">문학과 예술</div>
+        <div class="s3-strip-body">호르헤 루이스 보르헤스, 훌리오 코르타사르 등 세계문학사를 바꾼 작가들. 부에노스아이레스는 '책의 도시'로 선정됐습니다.</div>
+      </div>
+      <div class="s3-strip">
+        <div class="s3-strip-tag">Identity</div>
+        <div class="s3-strip-icon">🫖</div>
+        <div class="s3-strip-title">마테차 문화</div>
+        <div class="s3-strip-body">마테(mate)는 단순한 음료가 아닌 사회적 유대의 상징. 가족·친구와 함께 마시는 마테는 아르헨티나 정체성의 핵심입니다.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       SLIDE 4 — 탱고
+  ══════════════════════════════════ -->
+  <div class="slide" id="slide-4">
+    <div class="s4-diag-left"></div>
+    <div class="s4-diag-right"></div>
+    <div class="s4-content">
+      <div class="s4-left">
+        <div class="s4-eyebrow">유네스코 세계무형유산</div>
+        <div class="s4-title">탱<br>고</div>
+        <div class="s4-sub">
+          19세기 말 부에노스아이레스 라 보카 지구의<br>
+          항구 노동자와 이민자들이 만들어낸 춤.<br>
+          슬픔·열정·관능이 한 몸에 담긴 예술.
+        </div>
+        <div class="s4-fact">
+          <div class="s4-fact-num">900개+</div>
+          <div class="s4-fact-lbl">부에노스아이레스 내 밀롱가(탱고 클럽) 수</div>
+        </div>
+      </div>
+      <div class="s4-right">
+        <!-- 탱고 커플 SVG -->
+        <svg viewBox="0 0 300 480" class="s4-dancer" style="opacity:0;height:560px;margin-bottom:40px;">
+          <!-- 여성 -->
+          <ellipse cx="105" cy="80" rx="30" ry="32" fill="#c0392b"/>
+          <path d="M 75,112 Q 82,180 88,220 L 122,220 Q 128,180 135,112 Z" fill="#c0392b"/>
+          <path d="M 88,220 Q 70,310 55,400 L 80,400 Q 95,320 105,260 Q 115,320 130,400 L 155,400 Q 140,310 122,220 Z" fill="#8b0000"/>
+          <line x1="75" y1="140" x2="40"  y2="200" stroke="#c0392b" stroke-width="12" stroke-linecap="round"/>
+          <line x1="40" y1="200" x2="30"  y2="260" stroke="#c0392b" stroke-width="10" stroke-linecap="round"/>
+          <line x1="135" y1="140" x2="165" y2="185" stroke="#c0392b" stroke-width="12" stroke-linecap="round"/>
+          <circle cx="105" cy="80" r="22" fill="#f4a460"/>
+          <circle cx="98"  cy="76" r="4"  fill="#3d1a00"/>
+          <circle cx="112" cy="76" r="4"  fill="#3d1a00"/>
+          <!-- 남성 -->
+          <ellipse cx="195" cy="85" rx="28" ry="30" fill="#1a1a2e"/>
+          <rect x="167" y="115" width="56" height="100" rx="6" fill="#1a1a2e"/>
+          <path d="M 167,215 Q 170,310 165,400 L 188,400 Q 192,320 195,270 Q 198,320 202,400 L 225,400 Q 220,310 223,215 Z" fill="#0d0d1a"/>
+          <line x1="167" y1="140" x2="140" y2="190" stroke="#1a1a2e" stroke-width="12" stroke-linecap="round"/>
+          <line x1="140" y1="190" x2="135" y2="165" stroke="#1a1a2e" stroke-width="10" stroke-linecap="round"/>
+          <line x1="223" y1="140" x2="250" y2="180" stroke="#1a1a2e" stroke-width="12" stroke-linecap="round"/>
+          <circle cx="195" cy="85"  r="20" fill="#d4956a"/>
+          <circle cx="189" cy="82"  r="3.5" fill="#2d1500"/>
+          <circle cx="201" cy="82"  r="3.5" fill="#2d1500"/>
+          <!-- 연결 (손을 잡은 부분) -->
+          <line x1="165" y1="185" x2="140" y2="200" stroke="#c0392b" stroke-width="8" stroke-linecap="round"/>
+          <!-- 음표 장식 -->
+          <text x="20"  y="60"  font-size="28" fill="rgba(231,76,60,0.4)">♪</text>
+          <text x="240" y="140" font-size="22" fill="rgba(231,76,60,0.3)">♫</text>
+          <text x="50"  y="440" font-size="18" fill="rgba(231,76,60,0.25)">♩</text>
+        </svg>
+        <div class="s4-list">
+          <div class="s4-item">
+            <div class="s4-item-dot"></div>
+            <div class="s4-item-text"><strong>아스토르 피아졸라</strong>가 탱고에 재즈와 클래식을 융합해 누에보 탱고(Nuevo Tango)를 창조했습니다.</div>
+          </div>
+          <div class="s4-item">
+            <div class="s4-item-dot"></div>
+            <div class="s4-item-text">전 세계 <strong>60개국 이상</strong>에 아르헨티나 탱고 협회가 존재합니다.</div>
+          </div>
+          <div class="s4-item">
+            <div class="s4-item-dot"></div>
+            <div class="s4-item-text">매년 8월 부에노스아이레스에서 열리는 <strong>세계 탱고 선수권대회</strong>에 50개국이 참가합니다.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       SLIDE 5 — 음식
+  ══════════════════════════════════ -->
+  <div class="slide" id="slide-5">
+    <div class="s5-topbar">
+      <span class="s5-topbar-badge">미식</span>
+      <span class="s5-topbar-title">아르헨티나의 식탁</span>
+    </div>
+    <div class="s5-grid">
+      <!-- 큰 카드: 아사도 -->
+      <div class="s5-card big" style="background:#1a0a00;">
+        <div class="s5-overlay"></div>
+        <!-- 불꽃 SVG 배경 -->
+        <svg viewBox="0 0 560 960" style="position:absolute;inset:0;width:100%;height:100%;opacity:0.3;">
+          <path d="M280,960 C200,800 100,700 150,550 C180,450 100,380 200,300 C250,260 220,180 280,120 C340,180 310,260 360,300 C460,380 380,450 410,550 C460,700 360,800 280,960Z" fill="#e74c3c"/>
+          <path d="M280,900 C230,780 160,700 190,580 C210,500 160,440 230,370 C260,340 245,280 280,230 C315,280 300,340 330,370 C400,440 350,500 370,580 C400,700 330,780 280,900Z" fill="#F6B40E"/>
+        </svg>
+        <div class="s5-emoji">🥩</div>
+        <div class="s5-name">아사도 (Asado)</div>
+        <div class="s5-desc">아르헨티나의 영혼. 장작 불 위에서 몇 시간 천천히 굽는 바베큐. 가족·친구가 모이는 사회적 의식이기도 합니다.</div>
+      </div>
+      <!-- 작은 카드들 -->
+      <div class="s5-card" style="background:#4a1500;">
+        <div class="s5-overlay"></div>
+        <div class="s5-emoji">🥟</div>
+        <div class="s5-name">엠파나다</div>
+        <div class="s5-desc">고기·치즈·채소를 넣은 반달 모양 만두. 지역마다 속 재료가 달라 아르헨티나 문화 지도를 맛으로 읽을 수 있습니다.</div>
+      </div>
+      <div class="s5-card" style="background:#fff5e0;">
+        <div class="s5-emoji" style="color:#8B4513;">🍯</div>
+        <div class="s5-name dark">둘세 데 레체</div>
+        <div class="s5-desc dark">우유와 설탕을 오래 끓여 만든 카라멜 크림. 아르헨티나인이 가장 사랑하는 디저트로, 빵·아이스크림·케이크 어디든 들어갑니다.</div>
+      </div>
+      <div class="s5-card" style="background:#1a2a1a;">
+        <div class="s5-overlay"></div>
+        <div class="s5-emoji">🫖</div>
+        <div class="s5-name">마테 (Mate)</div>
+        <div class="s5-desc">예르바 마테 잎을 우린 쓴 음료. 통으로 돌려가며 마시는 것이 우정의 표시입니다.</div>
+      </div>
+      <div class="s5-card" style="background:#0a0a2a;">
+        <div class="s5-overlay"></div>
+        <div class="s5-emoji">🍦</div>
+        <div class="s5-name">헬라도 (Helado)</div>
+        <div class="s5-desc">이탈리아계 이민자가 전파한 아르헨티나식 젤라토. 부에노스아이레스의 아이스크림 소비량은 세계 최상위권입니다.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       SLIDE 6 — 경제
+  ══════════════════════════════════ -->
+  <div class="slide" id="slide-6">
+    <div class="s6-layout">
+      <div class="s6-left">
+        <div>
+          <div class="s6-sub">Economy</div>
+          <div class="s6-heading">아르헨티나<br><span>경제 프로필</span></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:20px;">
+          <div>
+            <div class="bar-row">
+              <div class="bar-label">🌾 농업·식품 수출 (GDP 기여)</div>
+              <div class="bar-track"><div class="bar-fill bar-fill-1">72%</div></div>
+            </div>
+          </div>
+          <div>
+            <div class="bar-row">
+              <div class="bar-label">🛢️ 에너지 (바카 무에르타 셰일)</div>
+              <div class="bar-track"><div class="bar-fill bar-fill-2">58%</div></div>
+            </div>
+          </div>
+          <div>
+            <div class="bar-row">
+              <div class="bar-label">🐄 축산·낙농 세계 점유율</div>
+              <div class="bar-track"><div class="bar-fill bar-fill-3">85%</div></div>
+            </div>
+          </div>
+          <div>
+            <div class="bar-row">
+              <div class="bar-label">🏭 제조업 비중</div>
+              <div class="bar-track"><div class="bar-fill bar-fill-4">43%</div></div>
+            </div>
+          </div>
+          <div>
+            <div class="bar-row">
+              <div class="bar-label">💻 IT·서비스 성장률</div>
+              <div class="bar-track"><div class="bar-fill bar-fill-5">65%</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="s6-right">
+        <div class="s6-kpi">
+          <div class="kpi-num">$640B</div>
+          <div class="kpi-label">GDP (PPP 기준, 남미 2위)</div>
+        </div>
+        <div class="s6-kpi">
+          <div class="kpi-num">45M</div>
+          <div class="kpi-label">인구 (세계 32위)</div>
+        </div>
+        <div class="s6-kpi">
+          <div class="kpi-num">#1</div>
+          <div class="kpi-label">대두·리튬 주요 생산국<br><span style="font-size:14px;color:rgba(255,255,255,0.4);">세계 리튬 매장량 21% 보유</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       SLIDE 7 — 마무리
+  ══════════════════════════════════ -->
+  <div class="slide" id="slide-7">
+    <div class="s7-ring s7-ring-1"></div>
+    <div class="s7-ring s7-ring-2"></div>
+    <div class="s7-ring s7-ring-3"></div>
+    <div class="s7-content">
+      <span class="s7-flag">🇦🇷</span>
+      <div class="s7-main-title">¡Viva<br><span>Argentina!</span></div>
+      <div class="s7-sub">
+        안데스에서 파타고니아까지, 탱고에서 아사도까지<br>
+        아르헨티나는 끝없이 매혹적인 나라입니다
+      </div>
+      <div class="s7-thanks">Muchas Gracias · 감사합니다</div>
+    </div>
+  </div>
+
+</div><!-- /stage -->
+
+<script>
+  const TOTAL = 8;
+  let current = 0;
+
+  function scaleSlides() {
+    const stage = document.getElementById('stage');
+    const sw = stage.clientWidth  || window.innerWidth;
+    const sh = stage.clientHeight || (window.innerHeight - 50); // 헤더 높이 보정
+    const scale = Math.min(sw / 1920, sh / 1080);
+    if (scale <= 0) return; // 0 이하면 스킵
+    document.querySelectorAll('.slide').forEach(s => {
+      s.style.setProperty('--s', scale);
+      s.style.transform = `translate(-50%, -50%) scale(${scale})`;
+    });
+  }
+  window.addEventListener('resize', scaleSlides);
+  // 다양한 타이밍에 호출해 stage 높이가 0인 상황 방지
+  document.addEventListener('DOMContentLoaded', scaleSlides);
+  window.addEventListener('load', scaleSlides);
+  requestAnimationFrame(() => { scaleSlides(); requestAnimationFrame(scaleSlides); });
+  scaleSlides();
+
+  function goTo(n, dir) {
+    const slides = document.querySelectorAll('.slide');
+    slides[current].classList.remove('active');
+    current = n;
+
+    // 먼저 active 추가 → transform 재적용 → 애니메이션 트리거 순서로
+    slides[current].classList.add('active');
+    scaleSlides(); // display:block 된 직후 transform 재설정
+
+    const cls = dir === 'fwd' ? 'entering-right' : 'entering-left';
+    slides[current].classList.remove('entering-right', 'entering-left');
+    void slides[current].offsetWidth; // reflow
+
+    // 애니메이션 재트리거: active 잠깐 제거 후 복구
+    slides[current].classList.remove('active');
+    void slides[current].offsetWidth;
+    slides[current].classList.add('active');
+    slides[current].classList.add(cls);
+
+    document.getElementById('slide-counter').textContent = `${current + 1} / ${TOTAL}`;
+  }
+
+  function navigate(delta) {
+    const next = current + delta;
+    if (next < 0 || next >= TOTAL) return;
+    goTo(next, delta > 0 ? 'fwd' : 'bwd');
+  }
+
+  document.addEventListener('keydown', e => {
+    if (['ArrowRight','ArrowDown','Enter',' '].includes(e.key)) { e.preventDefault(); navigate(1); }
+    if (['ArrowLeft','ArrowUp'].includes(e.key)) { e.preventDefault(); navigate(-1); }
+    if (e.key === 'f' || e.key === 'F') {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+      else document.exitFullscreen();
+    }
+  });
+</script>
+</body>
+</html>
